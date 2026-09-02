@@ -1,20 +1,25 @@
 import {libros, siguienteId} from '../data/libros.js';
 import { crearError } from '../utils/errores.js';
+import prisma from '../config/prisma.js';
 
 
-export const obtenerLibros = (req, res) => {
-    const { autor, anio } = req.query;
+export const obtenerLibros = async (req, res, next) => {
+    try {
+        const {autor, anio} = req.query;
 
-        let resultado = libros;
-
+        const where = {};
         if (autor) {
-            resultado = resultado.filter(libro => libro.autor.toLowerCase().includes(autor.toLowerCase()));
+            where.autor = {contains: autor, mode: 'insensitive'};
+        }
+        if (anio) {
+            where.anio = Number(anio);
         }
 
-        if (anio) {
-            resultado = resultado.filter(libro => libro.anio === Number(anio));
-        }
-        res.json(resultado);
+        const librosPersistidos = await prisma.libro.findMany({ where });
+        res.json(librosPersistidos);
+    } catch (error) {
+        next(error);
+    }
 };
 
 export const obtenerLibroPorId = (req, res, next) => {
