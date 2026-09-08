@@ -14,11 +14,20 @@ datasource db {
   provider = "postgresql"
 }
 
+model Categoria {
+  id Int @id @default(autoincrement())
+  nombre String @unique
+  libros Libro[]
+}
+
 model Libro {
   id          Int      @id @default(autoincrement())
   titulo      String
   autor       String
   anio        Int?
+  categoriaId Int?
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
