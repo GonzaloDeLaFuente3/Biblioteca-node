@@ -1,32 +1,17 @@
-import { crearError } from "../utils/errores.js";
+import { libroSchema } from "../validators/libros.schemas.js";
+import { crearError, detallarErroresZod } from "../utils/errores.js";
 
-const ANIO_MINIMO = 1450;
+
 
 export const validarLibro = (req, res, next) => {
-    const { titulo, autor, anio } = req.body;
-
-    if (typeof titulo !== 'string' || titulo.trim() === '') {
-        return next(crearError('El título es obligatorio, debe ser una cadena de texto y no vacia', 400));
+    const resultado = libroSchema.safeParse(req.body);
+    console.log('Resultado de la validación:', resultado);
+    if (!resultado.success) {
+        const detalles = detallarErroresZod(resultado.error);
+        return next(crearError('Datos de libro inválidos', 400, detalles));
     }
 
-    if (typeof autor !== 'string' || autor.trim() === '') {
-        return next(crearError('El autor es obligatorio, debe ser una cadena de texto y no vacia', 400));
-    }   
-
-    if (anio !== undefined && anio !== null){
-        const anioActual = new Date().getFullYear();
-
-        if(!Number.isInteger(anio)){
-            return next(crearError('El año debe ser un número entero', 400));
-        }
-
-        if (anio < ANIO_MINIMO || anio > anioActual) {
-            return next(crearError(`El año debe estar entre ${ANIO_MINIMO} y ${anioActual}`, 400));
-        }
-    }
-
-    req.body.titulo = titulo.trim();
-    req.body.autor = autor.trim();
+    req.body = resultado.data;
     next();
 }
 
